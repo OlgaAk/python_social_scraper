@@ -23,9 +23,8 @@ TAG_VK_Nth_Element = 0
 TAG_VK_SHOULD_GET_TEXT = True
 URL_VK = 'https://vk.com/nrw.invest'
 
-
-
-FILE = abspath("./../../Ziele_Marketing.xlsx")
+FILE = abspath("./Ziele_Marketing.xlsx")
+#"./../../Ziele_Marketing.xlsx"
 # dirpath = getcwd()
 
 class SocialMediaEnum(Enum):
@@ -44,7 +43,7 @@ class SocialMediaEnum(Enum):
 def openBrowser():
     options = Options()
     options.headless = True
-    browser = webdriver.Firefox(options=options, executable_path=r'C:/Users/NRW Info/geckodriver.exe')
+    browser = webdriver.Firefox(options=options, executable_path=r'C:/Users/Olga/Documents/geckodriver.exe')  #C:/Users/NRW Info/geckodriver.exe
     return browser
 
 def getDataFromHtml(browser, social):
@@ -53,7 +52,6 @@ def getDataFromHtml(browser, social):
     html = browser.page_source
     soup = BeautifulSoup(html, 'lxml')
     a = soup.findAll(social.tag, social.tag_attr)
-    print("line 38")
     if social.tag_should_get_text == True:
         print(a[social.tag_nth_element].string)
         return a[social.tag_nth_element].get_text()
@@ -64,25 +62,24 @@ def getDataFromHtml(browser, social):
 def getXlsXFilePath():
     return [f for f in listdir(dirpath) if isfile(join(dirpath, f)) and f.endswith("test.xlsx") ]
 
-def writeToExel(data, social):
-    wb = openpyxl.load_workbook(filename=FILE)
-    ws = wb.active #todo unhardcode
-    rowContent = data    
-    ws.cell(row=social.row, column=social.column, value=rowContent)   
-    wb.save(FILE)
+def writeToExel(data, social, worksheet):
+    worksheet.cell(row=social.row, column=social.column, value=data)
 
 def main():
+    browser = openBrowser()
+    wb = openpyxl.load_workbook(filename=FILE)
+    worksheet = wb.active #todo unhardcode
     for social in SocialMediaEnum:
         try:
-            browser = openBrowser()      
             print(social.url, social.tag)  #debugging    
             result = getDataFromHtml(browser, social)
             print(result)
-            writeToExel(result, social)
+            writeToExel(result, social, worksheet)
         except Exception as err:
             print('parsing unsuccessfull', err)
-        else:
-            browser.quit()
+    browser.quit()
+    wb.save(FILE)
+
 
 if __name__ == "__main__":
     main()
